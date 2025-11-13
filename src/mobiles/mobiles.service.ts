@@ -12,15 +12,15 @@ export class MobilesService {
     return `This action returns all mobiles`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} mobile`;
   }
 
-  update(id: number, updateMobileDto: UpdateMobileDto) {
+  update(id: string, updateMobileDto: UpdateMobileDto) {
     return `This action updates a #${id} mobile`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} mobile`;
   }
 }
