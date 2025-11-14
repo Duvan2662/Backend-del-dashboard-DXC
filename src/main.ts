@@ -2,13 +2,12 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+ 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
-
   app.setGlobalPrefix('api') // → todas las rutas comienzan con /api
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,  // elimina propiedades extra que lleguen en la peticion

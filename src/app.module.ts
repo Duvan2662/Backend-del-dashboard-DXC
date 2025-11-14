@@ -5,9 +5,14 @@ import { MobilesModule } from './mobiles/mobiles.module';
 
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+     ServeStaticModule.forRoot({
+          rootPath: join(__dirname, '..', 'public'), // Sirve para configurar la carpeta desde donde se serviran los archivos estaticos
+    }),
     MobilesModule,
     ConfigModule.forRoot(), //Sirve para cargar las variables de entorno .env
     TypeOrmModule.forRoot({

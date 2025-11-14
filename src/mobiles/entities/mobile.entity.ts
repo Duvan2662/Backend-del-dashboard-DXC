@@ -53,7 +53,7 @@ export class Mobile {
         description: 'Token único para generar QR',
         example: '5c4f3d21-8b7a-4b60-9a1d-2b47e80c3f8f',
     })
-    @Column({ unique: true })
+    @Column({ type: 'uuid', unique: true })
     qr_token: string;
 
     @ApiProperty({

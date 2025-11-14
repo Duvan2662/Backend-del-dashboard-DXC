@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { SystemEnum } from "../interfaces/systems.interface";
 
 export class CreateMobileDto {
 
@@ -50,7 +51,6 @@ export class CreateMobileDto {
         description: 'Sistema operativo del dispositivo (Android, iOS, etc.)',
         example: 'Android'
     })
-    @IsString()
-    @IsNotEmpty()
-    sistema_operativo: string;
+    @IsEnum(SystemEnum, { message: 'El sistema operativo debe ser Android o iOS' })
+    sistema_operativo: SystemEnum;
 }
