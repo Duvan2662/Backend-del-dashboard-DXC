@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateMobileDto } from './dto/create-mobile.dto';
 import { UpdateMobileDto } from './dto/update-mobile.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Mobile } from './entities/mobile.entity';
 import { DataSource, Repository } from 'typeorm';
 import { QrService } from './services/qr.service';
+import { isUUID } from 'class-validator';
 
 
 @Injectable()
@@ -15,6 +16,8 @@ export class MobilesService {
   constructor(
     @InjectRepository(Mobile)
     private readonly mobileRepository: Repository<Mobile>,
+
+
     private readonly dataSource: DataSource,
     private readonly qrService: QrService,
   ) {
@@ -64,12 +67,26 @@ export class MobilesService {
   }
 
 
-  findAll() {
-    return `This action returns all mobiles`;
+   async findAll() {
+    return await this.mobileRepository.find();
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} mobile`;
+
+  async findOne(busqueda: string) {
+
+    let mobile: Mobile | null;
+
+    if (isUUID(busqueda)) {
+       mobile = await this.mobileRepository.findOneBy({id: busqueda});
+    }else{
+      const queryBuilder = this.mobileRepository.createQueryBuilder('mobile');
+      mobile = await queryBuilder.where('mobile.imei1 = :busqueda OR mobile.imei2 = :busqueda OR mobile.nombre = :busqueda', { busqueda }).getOne();
+    }
+
+    if (!mobile) {
+      throw new NotFoundException(`Mobile with id, "${busqueda}" not found`);
+    }
+    return mobile;
   }
 
   update(id: string, updateMobileDto: UpdateMobileDto) {
