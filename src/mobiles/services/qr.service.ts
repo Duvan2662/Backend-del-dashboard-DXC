@@ -25,7 +25,7 @@ export class QrService {
       // Generar archivo QR
       await QRCode.toFile(filePath, token);
 
-      // Generar URL pública (recordemos que los estáticos no usan /api)
+      // Generar URL pública (los estáticos no usan /api)
       const host = process.env.HOST_API!.replace('/api', '');
       const imageUrl = `${host}/qr/${fileName}`;
 

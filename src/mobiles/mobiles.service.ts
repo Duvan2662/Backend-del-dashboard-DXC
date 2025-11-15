@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 import { isUUID } from 'class-validator';
-import path from 'path';
+import * as path from 'path';
 import * as fs from 'fs';
 
 import { CreateMobileDto } from './dto/create-mobile.dto';
@@ -71,20 +71,20 @@ export class MobilesService {
   // ============================================================
   async findAll(paginationDto: PaginationDto) {
 
-  const { limit = 10, offset = 0 } = paginationDto;
+    const { limit = 10, offset = 0 } = paginationDto;
 
-  const [data, total] = await this.mobileRepository.findAndCount({
-    take: limit,
-    skip: offset,
-    order: { created_at: 'DESC' },
-  });
+    const [data, total] = await this.mobileRepository.findAndCount({
+      take: limit,
+      skip: offset,
+      order: { created_at: 'DESC' },
+    });
 
-  return {
-    total,
-    limit,
-    offset,
-    data,
-  };
+    return {
+      total,
+      limit,
+      offset,
+      data,
+    };
   }
 
 
@@ -98,8 +98,8 @@ export class MobilesService {
     let mobile: Mobile | null;
 
     if (isUUID(busqueda)) {
-       mobile = await this.mobileRepository.findOneBy({id: busqueda});
-    }else{
+      mobile = await this.mobileRepository.findOneBy({ id: busqueda });
+    } else {
       const queryBuilder = this.mobileRepository.createQueryBuilder('mobile');
       mobile = await queryBuilder.where('mobile.imei1 = :busqueda OR mobile.imei2 = :busqueda OR mobile.nombre = :busqueda', { busqueda }).getOne();
     }
@@ -123,14 +123,14 @@ export class MobilesService {
     if (!mobile) {
       throw new NotFoundException(`Mobile with id: ${id} not found`)
     }
-    
+
     try {
       await this.mobileRepository.save(mobile);
       return mobile;
     } catch (error) {
       this.handleExceptions(error);
     }
-    
+
   }
 
 
@@ -142,15 +142,9 @@ export class MobilesService {
     if (!mobile) {
       throw new BadRequestException(`Mobile with id "${id}" not found`);
     }
-    
-    //Eliminacion del QR asociado
-    if (mobile.qr_image) {
-      const qrFullPath = path.join(process.cwd(), mobile.qr_image);
-      if (fs.existsSync(qrFullPath)) {
-        fs.unlinkSync(qrFullPath);
-      }
-    }
 
+    // Eliminar imagen QR
+    this.deleteQrImage(mobile.qr_image);
     //Eliminacion del registro del movil
     await this.mobileRepository.remove(mobile);
     return { message: `Mobile with id "${id}" was deleted` };
@@ -160,20 +154,27 @@ export class MobilesService {
   // ============================================================
   // DELETE ALL MOBILES
   // ============================================================
-  async deleteAllMobiles(){
-    const query = this.mobileRepository.createQueryBuilder('mobile');
+  async deleteAllMobiles() {
     try {
-      return await query
-        .delete()
-        .where({})
-        .execute();
+      const mobiles = await this.mobileRepository.find();
+
+      // Eliminar imágenes en paralelo
+      mobiles.forEach(mobile => this.deleteQrImage(mobile.qr_image));
+
+      // Borrar BD
+      await this.mobileRepository.delete({});
+
+      return { message: 'Todos los móviles y sus QR fueron eliminados' };
+
     } catch (error) {
-      this.handleExceptions(error)
+      this.handleExceptions(error);
     }
   }
 
 
-
+  // ============================================================
+  // Control de errores
+  // ============================================================
   private handleExceptions(error: any): never {
     console.log(error);
     if (error.code === '23505') {
@@ -181,4 +182,31 @@ export class MobilesService {
     }
     throw new InternalServerErrorException('Unexpected server error');
   }
+
+
+  private deleteQrImage(qrUrl?: string): void {
+    if (!qrUrl) return;
+
+    try {
+      const fileName = qrUrl.split('/').pop();
+      if (!fileName) return;
+
+      // Funciona en dev y prod
+      const qrFolder = path.join(__dirname, '..', '..', 'public', 'qr');
+      const qrFullPath = path.join(qrFolder, fileName);
+
+      if (fs.existsSync(qrFullPath)) {
+        fs.unlinkSync(qrFullPath);
+        console.log('QR eliminado:', qrFullPath);
+      } else {
+        console.log('No existe el archivo:', qrFullPath);
+      }
+
+    } catch (error) {
+      console.error('Error deleting QR image:', error);
+    }
+  }
+
+
+
 }
