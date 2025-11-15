@@ -4,6 +4,7 @@ import { CreateMobileDto } from './dto/create-mobile.dto';
 import { UpdateMobileDto } from './dto/update-mobile.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Mobile } from './entities/mobile.entity';
+import { PaginationDto } from 'src/common/dto/pagination-common.dto';
 
 @Controller('mobiles')
 export class MobilesController {
@@ -30,8 +31,8 @@ export class MobilesController {
   
   @Get()
   @ApiOperation({ summary: 'Lista todos los dispositivos móviles' })
-  findAll() {
-    return this.mobilesService.findAll();
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.mobilesService.findAll(paginationDto);
   }
 
   // ================================
