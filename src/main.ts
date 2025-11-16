@@ -6,6 +6,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Permite peticiones Postman o 
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Origen no permitido por CORS: ' + origin), false);
+    },
+    credentials: true,
+  });
   const logger = new Logger('Bootstrap');
   app.setGlobalPrefix('api') // → todas las rutas comienzan con /api
   app.useGlobalPipes(
