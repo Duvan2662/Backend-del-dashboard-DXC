@@ -71,13 +71,25 @@ export class MobilesService {
   // ============================================================
   async findAll(paginationDto: PaginationDto) {
 
-    const { limit = 10, offset = 0 } = paginationDto;
+    const { limit = 10, offset = 0, search } = paginationDto;
 
-    const [data, total] = await this.mobileRepository.findAndCount({
-      take: limit,
-      skip: offset,
-      order: { created_at: 'DESC' },
-    });
+    const query = this.mobileRepository.createQueryBuilder('mobile')
+      .take(limit)
+      .skip(offset)
+      .orderBy('mobile.created_at', 'DESC');
+
+    if (search && search.trim() !== '') {
+      query.where(`
+    mobile.tipo LIKE :search 
+    OR mobile.nombre LIKE :search
+    OR mobile.imei1 LIKE :search
+    OR mobile.imei2 LIKE :search
+    OR mobile.sistema_operativo::text LIKE :search
+  `, { search: `%${search}%` });
+    }
+
+
+    const [data, total] = await query.getManyAndCount();
 
     return {
       total,
